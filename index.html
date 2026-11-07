@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Heads-Up Poker Chips</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--felt:#0f5132;--felt2:#0b3d26;--gold:#f2c14e;--ink:#f4f1e8;--mut:#a9c4b4;--red:#e05252;--blue:#4c8dff;--card:#123f2a;--line:rgba(255,255,255,.12)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% 30%,#14653f 0%,var(--felt) 45%,var(--felt2) 100%);color:var(--ink);font-family:Outfit,system-ui,sans-serif}
+body{min-height:100vh}
+.wrap{max-width:480px;margin:0 auto;padding:16px 14px 28px}
+h1{font-size:26px;margin:6px 0 2px;letter-spacing:.5px}
+h1 span{color:var(--gold)}
+.sub{color:var(--mut);margin:0 0 18px;font-size:14px}
+.box{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.box h2{margin:0 0 10px;font-size:17px}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--ink);font:inherit;font-size:16px}
+input:focus{outline:2px solid var(--gold);outline-offset:0}
+.row{display:flex;gap:10px}.row>*{flex:1}
+button{font:inherit;font-weight:600;font-size:16px;border:0;border-radius:12px;padding:13px 12px;cursor:pointer;color:#1b1b1b;background:var(--gold);transition:transform .05s,opacity .2s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.35;cursor:default}
+button.ghost{background:rgba(255,255,255,.08);color:var(--ink);border:1px solid var(--line)}
+button.red{background:var(--red);color:#fff}
+button.blue{background:var(--blue);color:#fff}
+button.full{width:100%;margin-top:12px}
+.small{font-size:13px;color:var(--mut)}
+.err{color:#ffb4b4;font-size:14px;min-height:18px;margin-top:8px}
+.hidden{display:none!important}
+/* table */
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.top .code{font-size:13px;color:var(--mut)}
+.top .code b{color:var(--gold);letter-spacing:2px;font-size:15px}
+.top .tools{display:flex;gap:6px}
+.top .tools button{padding:7px 10px;font-size:13px}
+.seat{position:relative;background:rgba(0,0,0,.25);border:2px solid var(--line);border-radius:18px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s,box-shadow .2s}
+.seat.turn{border-color:var(--gold);box-shadow:0 0 0 4px rgba(242,193,78,.18)}
+.seat.out{opacity:.45}
+.seat .nm{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.seat .stk{font-size:26px;font-weight:800;color:var(--gold)}
+.seat .tag{font-size:12px;color:var(--mut);margin-top:2px}
+.dchip{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#fff;color:#111;font-size:12px;font-weight:800;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.bet{display:flex;justify-content:center;margin:8px 0;min-height:30px}
+.betchip{background:rgba(0,0,0,.35);border:1px dashed rgba(242,193,78,.6);color:var(--gold);padding:4px 14px;border-radius:20px;font-weight:600}
+.center{text-align:center;padding:14px 10px;border-radius:18px;background:rgba(0,0,0,.18);border:1px solid var(--line)}
+.street{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--mut)}
+.pot{font-size:40px;font-weight:800;line-height:1.1;margin:2px 0}
+.pot small{font-size:14px;color:var(--mut);font-weight:400;display:block}
+.deal{margin-top:8px;font-size:14px;background:rgba(242,193,78,.12);color:#ffe7a8;border-radius:10px;padding:8px 10px}
+.last{margin-top:8px;font-size:14px;color:var(--ink)}
+.bar{margin-top:14px}
+.bar .who{text-align:center;color:var(--mut);font-size:14px;margin-bottom:8px}
+.bar .who b{color:var(--gold)}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.raise{margin-top:10px;background:rgba(0,0,0,.25);border-radius:14px;padding:12px;border:1px solid var(--line)}
+.raise .amt{font-size:30px;font-weight:800;text-align:center;color:var(--gold)}
+input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--gold);height:36px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 10px}
+.quick button{padding:9px 4px;font-size:13px}
+.win{display:grid;gap:8px}
+.result{font-size:20px;font-weight:700;color:var(--gold);margin:6px 0}
+.log{margin-top:14px;font-size:13px;color:var(--mut);max-height:180px;overflow:auto;background:rgba(0,0,0,.2);border-radius:12px;padding:10px 12px;border:1px solid var(--line)}
+.log div{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.bigcode{font-size:48px;font-weight:800;letter-spacing:10px;color:var(--gold);text-align:center;margin:8px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modal .box{width:100%;max-width:420px;background:#0d4129}
+.status{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:20px;font-size:13px;z-index:20}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="modal"></div>
+<div id="status" class="status hidden"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const fmt=n=>Number(n).toLocaleString('en-US');
+const ls={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+function toast(t,ms=2500){const s=$('#status');s.textContent=t;s.classList.remove('hidden');clearTimeout(toast._t);toast._t=setTimeout(()=>s.classList.add('hidden'),ms)}
+
+let db=null,myId=null;
+let mode=null;          // 'local' | 'online'
+let S=null;             // game state
+let code=null,unsub=null,busy=false,loadTimer=null;
+let raiseOpen=false,raiseTo=0;
+
+// ---------- poker engine (heads-up No-Limit Hold'em betting) ----------
+const NEXT={preflop:'flop',flop:'turn',turn:'river',river:'showdown'};
+const LABEL={preflop:'Pre-flop',flop:'Flop',turn:'Turn',river:'River',showdown:'Showdown',done:'Hand over'};
+const nm=(n,i)=>n.players[i].name||('Player '+(i+1));
+function newGame(names,start,sb,bb){
+  return {v:1,settings:{start,sb,bb},players:[{name:names[0],uid:null,stack:start},{name:names[1],uid:null,stack:start}],
+    dealer:1,handNo:0,hand:null,log:[],hist:[],status:'ready',updated:Date.now()};
+}
+function maxBet(h){return Math.max(h.bets[0],h.bets[1])}
+function potTotal(h){return h.pot+h.bets[0]+h.bets[1]}
+function needs(n,i){const h=n.hand;if(h.allIn[i])return false;if(h.bets[i]<maxBet(h))return true;return !h.acted[i]&&!h.allIn[1-i]}
+function put(n,i,amt){amt=Math.max(0,Math.min(amt,n.players[i].stack));n.players[i].stack-=amt;n.hand.bets[i]+=amt;if(n.players[i].stack===0)n.hand.allIn[i]=true;return amt}
+function log(n,t){n.log.push(t);if(n.log.length>60)n.log=n.log.slice(-60);if(n.hand)n.hand.last=t}
+function startHand(n){
+  n.dealer=1-n.dealer;n.handNo++;
+  const d=n.dealer,b=1-d;
+  n.hand={street:'preflop',pot:0,bets:[0,0],acted:[false,false],allIn:[false,false],folded:-1,toAct:d,minRaise:n.settings.bb,result:null,runout:false,last:''};
+  const s=put(n,d,n.settings.sb),g=put(n,b,n.settings.bb);
+  log(n,`Hand #${n.handNo}: ${nm(n,d)} (dealer) posts SB ${fmt(s)}, ${nm(n,b)} posts BB ${fmt(g)}`);
+  settle(n);
+}
+function collect(n){
+  const h=n.hand,[a,b]=h.bets;
+  if(a!==b&&h.folded<0){const hi=a>b?0:1,ex=Math.abs(a-b);h.bets[hi]-=ex;n.players[hi].stack+=ex;h.allIn[hi]=n.players[hi].stack===0;log(n,`${fmt(ex)} uncalled returned to ${nm(n,hi)}`)}
+  h.pot+=h.bets[0]+h.bets[1];h.bets=[0,0];h.acted=[false,false];h.minRaise=n.settings.bb;
+}
+function award(n,w){const h=n.hand,amt=h.pot;n.players[w].stack+=amt;h.pot=0;h.street='done';h.result=`${nm(n,w)} wins ${fmt(amt)}`;log(n,h.result)}
+function split(n){const h=n.hand,half=Math.floor(h.pot/2),odd=h.pot-half*2,nd=1-n.dealer;n.players[0].stack+=half;n.players[1].stack+=half;n.players[nd].stack+=odd;h.result=`Split pot — ${fmt(half)} each`+(odd?` (+1 to ${nm(n,nd)})`:'');h.pot=0;h.street='done';log(n,h.result)}
+function settle(n){
+  const h=n.hand;
+  if(h.folded>=0){collect(n);award(n,1-h.folded);return}
+  if(needs(n,h.toAct))return;
+  const o=1-h.toAct;if(needs(n,o)){h.toAct=o;return}
+  collect(n);
+  if(h.allIn[0]||h.allIn[1]){h.street='showdown';h.runout=true;log(n,'All-in! Run out the board');return}
+  h.street=NEXT[h.street];
+  if(h.street!=='showdown'){h.toAct=1-n.dealer;log(n,`— ${LABEL[h.street]} —`)}else log(n,'Showdown — reveal cards');
+}
+function act(n,type,to){
+  const h=n.hand,i=h.toAct,p=n.players[i],mb=maxBet(h),name=nm(n,i);
+  if(type==='fold'){h.folded=i;log(n,`${name} folds`)}
+  else if(type==='check'){h.acted[i]=true;log(n,`${name} checks`)}
+  else if(type==='call'){const a=put(n,i,mb-h.bets[i]);h.acted[i]=true;log(n,`${name} calls ${fmt(a)}${h.allIn[i]?' (all-in)':''}`)}
+  else if(type==='raise'){
+    const cap=h.bets[i]+p.stack;to=Math.min(Math.round(to),cap);
+    if(to<=mb){return act(n,'call')}
+    const inc=to-mb;if(inc>=h.minRaise)h.minRaise=inc;
+    put(n,i,to-h.bets[i]);h.acted[i]=true;h.acted[1-i]=false;
+    log(n,`${name} ${mb===0?'bets':'raises to'} ${fmt(to)}${h.allIn[i]?' (all-in)':''}`);
+  }
+  settle(n);
+}
+
+// ---------- state commit ----------
+function stripHist(n){const c=clone(n);delete c.hist;return c}
+function mutate(fn){
+  if(busy)return;
+  const n=clone(S);
+  n.hist=[...(S.hist||[]).slice(-9),JSON.stringify(stripHist(S))];
+  fn(n);n.updated=Date.now();raiseOpen=false;commit(n);
+}
+function undo(){
+  if(!S.hist||!S.hist.length)return;
+  const hist=S.hist.slice(0,-1),prev=JSON.parse(S.hist[S.hist.length-1]);prev.hist=hist;prev.updated=Date.now();raiseOpen=false;commit(prev);toast('Undone');
+}
+async function commit(n){
+  S=n;render();
+  if(mode==='local'){ls.set('pk2_local',S);return}
+  busy=true;render();
+  try{const {error}=await db.from('poker_games').update({state:S,updated_at:new Date().toISOString()}).eq('code',code);if(error)throw error}
+  catch(e){toast('Could not save — check your internet',4000)}
+  busy=false;render();
+}
+
+// ---------- seats / permissions ----------
+function mySeat(){if(mode!=='online'||!S)return -1;return S.players.findIndex(p=>p.uid&&p.uid===myId)}
+function canAct(i){return mode==='local'||mySeat()===i}
+function isPlayer(){return mode==='local'||mySeat()>=0}
+
+// ---------- screens ----------
+function home(msg){
+  mode=null;S=null;if(unsub){unsub();unsub=null}code=null;
+  const local=ls.get('pk2_local');const last=ls.get('pk2_last');
+  const hashCode=(location.hash||'').replace('#','').toUpperCase();
+  const online=!!db;
+  $('#app').innerHTML=`
+  <h1>♠ Heads-Up <span>Poker</span></h1>
+  <p class="sub">Real cards on the table. Chips, pot, blinds and turns live here.</p>
+  ${local&&local.players?`<div class="box"><h2>Resume one-phone game</h2><div class="small">${esc(local.players[0].name)} ${fmt(local.players[0].stack)} · ${esc(local.players[1].name)} ${fmt(local.players[1].stack)}</div><button class="full" data-a="resumeLocal">Resume</button></div>`:''}
+  ${online&&last?`<div class="box"><h2>Rejoin table <span style="color:var(--gold);letter-spacing:2px">${esc(last)}</span></h2><button class="full" data-a="rejoin">Rejoin</button></div>`:''}
+  ${online?`
+  <div class="box">
+    <h2>Join a friend's table</h2>
+    <div class="row"><div><label>Table code</label><input id="jcode" maxlength="4" autocapitalize="characters" placeholder="ABCD" value="${esc(hashCode)}"></div>
+    <div><label>Your name</label><input id="jname" maxlength="14" placeholder="Name" value="${esc(ls.get('pk2_name')||'')}"></div></div>
+    <button class="full blue" data-a="join">Join table</button>
+  </div>
+  <div class="box">
+    <h2>Create a table (each player on own phone)</h2>
+    <label>Your name</label><input id="cname" maxlength="14" placeholder="Name" value="${esc(ls.get('pk2_name')||'')}">
+    ${chipFields('c')}
+    <button class="full" data-a="create">Create table</button>
+  </div>`:`
+  <div class="box small">Couldn't load online play — check your internet. One-phone mode still works.</div>`}
+  <div class="box">
+    <h2>One-phone mode</h2>
+    <div class="small">Pass the phone between turns.</div>
+    <div class="row"><div><label>Player 1</label><input id="ln1" maxlength="14" placeholder="Player 1"></div><div><label>Player 2</label><input id="ln2" maxlength="14" placeholder="Player 2"></div></div>
+    ${chipFields('l')}
+    <button class="full ghost" data-a="createLocal">Start one-phone game</button>
+  </div>
+  <div class="err" id="err">${esc(msg||'')}</div>`;
+}
+function chipFields(p){return `<div class="row"><div><label>Starting chips</label><input id="${p}start" type="number" inputmode="numeric" value="1000"></div><div><label>Small blind</label><input id="${p}sb" type="number" inputmode="numeric" value="10"></div><div><label>Big blind</label><input id="${p}bb" type="number" inputmode="numeric" value="20"></div></div>`}
+function readChips(p){const start=parseInt($('#'+p+'start').value),sb=parseInt($('#'+p+'sb').value),bb=parseInt($('#'+p+'bb').value);
+  if(!(start>0&&sb>0&&bb>=sb&&bb<start))return null;return {start,sb,bb}}
+function err(t){const e=$('#err');if(e)e.textContent=t;else toast(t)}
+
+// ---------- online (Supabase) ----------
+const SB_URL='https://bbfxjfsvqjmtcynpmozl.supabase.co',SB_KEY='sb_publishable_nHgHxj7Oqo29YC05039c-Q_XqUL3S9z';
+function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ';let c='';for(let i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];return c}
+async function fetchGame(c){const {data,error}=await db.from('poker_games').select('state').eq('code',c).maybeSingle();if(error)throw error;return data?data.state:null}
+async function createOnline(){
+  const name=$('#cname').value.trim(),ch=readChips('c');
+  if(!name)return err('Enter your name');if(!ch)return err('Check chips: big blind ≥ small blind, and less than starting chips');
+  ls.set('pk2_name',name);busy=true;err('Creating…');
+  try{
+    let c=null;
+    for(let t=0;t<6&&!c;t++){
+      const cand=genCode();const n=newGame([name,''],ch.start,ch.sb,ch.bb);n.players[0].uid=myId;n.status='waiting';n.code=cand;log(n,`${name} created the table`);
+      const {error}=await db.from('poker_games').insert({code:cand,state:n});
+      if(!error)c=cand;else if(error.code!=='23505')throw error;
+    }
+    busy=false;if(!c)return err('Could not create table. Try again.');openOnline(c);
+  }catch(e){busy=false;err('Could not create table — check your internet and try again.')}
+}
+async function joinOnline(c,name){
+  c=(c||'').trim().toUpperCase();
+  if(c.length!==4)return err('Enter the 4-letter code');
+  err('Joining…');
+  try{
+    const g0=await fetchGame(c);
+    if(!g0)return err('No table with code '+c);
+    const g=clone(g0);
+    if(g.players.findIndex(p=>p.uid===myId)<0){
+      if(!name)return err('Enter your name');
+      if(g.players[1].uid)return err('That table already has two players');
+      g.players[1].uid=myId;g.players[1].name=name;g.status='ready';log(g,`${name} joined the table`);g.updated=Date.now();
+      ls.set('pk2_name',name);
+      const {data,error}=await db.from('poker_games').update({state:g,updated_at:new Date().toISOString()}).eq('code',c).is('state->players->1->>uid',null).select('code');
+      if(error)throw error;
+      if(!data||!data.length)return err('Someone else just took that seat');
+    }
+    openOnline(c);
+  }catch(e){err('Could not join — check your internet and try again.')}
+}
+function applyRemote(st){
+  if(!st||busy)return;
+  if(S&&mode==='online'&&st.updated&&S.updated&&st.updated<S.updated)return;
+  S=clone(st);render();
+}
+async function refresh(){if(mode!=='online'||!code)return;try{const st=await fetchGame(code);if(!st){ls.del('pk2_last');home('That table no longer exists.');return}applyRemote(st)}catch(e){}}
+function openOnline(c){
+  mode='online';code=c;ls.set('pk2_last',c);try{history.replaceState(null,'','#'+c)}catch(e){}
+  if(unsub)unsub();
+  $('#app').innerHTML='<div class="center" style="margin-top:40px">Connecting to table '+esc(c)+'…</div>';
+  const ch=db.channel('poker-'+c).on('postgres_changes',{event:'UPDATE',schema:'public',table:'poker_games',filter:'code=eq.'+c},pl=>applyRemote(pl.new&&pl.new.state)).subscribe();
+  const poll=setInterval(refresh,4000); // backup in case live updates drop
+  unsub=()=>{clearInterval(poll);try{db.removeChannel(ch)}catch(e){}};
+  refresh();
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+
+// ---------- table render ----------
+function render(){
+  if(!S||!mode)return;
+  if(mode==='online'&&S.status==='waiting')return renderWaiting();
+  const n=S,h=n.hand,me=mySeat();
+  const bottom=mode==='online'&&me>=0?me:0,topI=1-bottom;
+  const gameOver=(!h||h.street==='done')&&(n.players[0].stack===0||n.players[1].stack===0);
+  const seat=i=>{
+    const p=n.players[i],turn=h&&h.street!=='done'&&h.street!=='showdown'&&h.toAct===i,
+      folded=h&&h.folded===i,you=mode==='online'&&i===me;
+    let tag=[];if(h&&h.street!=='done'){if(n.dealer===i)tag.push('Small blind');else tag.push('Big blind')}
+    if(h&&h.allIn[i]&&h.street!=='done')tag.push('ALL-IN');if(folded)tag.push('Folded');
+    return `<div class="seat ${turn?'turn':''} ${folded?'out':''}">
+      <div><div class="nm">${n.dealer===i&&h?'<span class="dchip">D</span>':''}${esc(nm(n,i))}${you?' <span class="small">(you)</span>':''}</div>
+      <div class="tag">${tag.join(' · ')||'&nbsp;'}</div></div>
+      <div class="stk">${fmt(p.stack)}</div></div>`};
+  const betChip=i=>`<div class="bet">${h&&h.bets[i]>0?`<span class="betchip">bet ${fmt(h.bets[i])}</span>`:''}</div>`;
+  let center='';
+  if(!h){center=`<div class="street">Ready</div><div class="pot">—</div><div class="deal">Blinds ${fmt(n.settings.sb)}/${fmt(n.settings.bb)} · Starting ${fmt(n.settings.start)}</div>`}
+  else{
+    const dealer=esc(nm(n,n.dealer));
+    const tip={preflop:`${dealer} deals 2 cards face-down to each player`,flop:'Burn 1 · deal 3 cards face-up (the flop)',turn:'Burn 1 · deal 1 card (the turn)',river:'Burn 1 · deal 1 card (the river)',
+      showdown:h.runout?'Deal out the rest of the board (up to 5 cards), then both reveal':'Both players reveal their cards',done:''}[h.street];
+    center=`<div class="street">Hand #${n.handNo} · ${LABEL[h.street]}</div>
+      <div class="pot">${fmt(h.street==='done'?0:potTotal(h))}<small>pot</small></div>
+      ${tip?`<div class="deal">🂠 ${tip}</div>`:''}
+      ${h.result?`<div class="result">🏆 ${esc(h.result)}</div>`:h.last?`<div class="last">${esc(h.last)}</div>`:''}`;
+  }
+  $('#app').innerHTML=`
+    <div class="top">
+      <div class="code">${mode==='online'?`Table <b>${esc(code)}</b>`:'One-phone game'}</div>
+      <div class="tools">
+        ${isPlayer()?`<button class="ghost" data-a="undo" ${!n.hist||!n.hist.length||busy?'disabled':''}>↶ Undo</button><button class="ghost" data-a="blinds">Blinds</button>`:''}
+        <button class="ghost" data-a="leave">Exit</button>
+      </div>
+    </div>
+    ${seat(topI)}${betChip(topI)}
+    <div class="center">${center}</div>
+    ${betChip(bottom)}${seat(bottom)}
+    <div class="bar">${controls(gameOver)}</div>
+    <div class="log">${n.log.slice().reverse().map(l=>`<div>${esc(l)}</div>`).join('')}</div>`;
+  if(raiseOpen)wireRaise();
+}
+function controls(gameOver){
+  const n=S,h=n.hand;
+  if(!isPlayer())return `<div class="who">You're watching this table.</div>`;
+  if(gameOver){const w=n.players[0].stack>0?0:1;
+    return `<div class="center"><div class="result">🏆 ${esc(nm(n,w))} wins the game!</div><button class="full" data-a="rematch" ${busy?'disabled':''}>Rematch (reset to ${fmt(n.settings.start)} each)</button></div>`}
+  if(!h||h.street==='done')
+    return `<button class="full" data-a="deal" ${busy?'disabled':''}>${h?'Next hand':'Deal first hand'}</button>
+      <div class="small" style="text-align:center;margin-top:8px">Dealer button moves to ${esc(nm(n,1-n.dealer))}</div>`;
+  if(h.street==='showdown')
+    return `<div class="who">Who has the best hand?</div><div class="win">
+      <button data-a="win0" ${busy?'disabled':''}>${esc(nm(n,0))} wins</button>
+      <button data-a="win1" ${busy?'disabled':''}>${esc(nm(n,1))} wins</button>
+      <button class="ghost" data-a="split" ${busy?'disabled':''}>Split pot (tie)</button></div>`;
+  const i=h.toAct,p=n.players[i],mb=maxBet(h),toCall=mb-h.bets[i];
+  if(!canAct(i))return `<div class="who">Waiting for <b>${esc(nm(n,i))}</b>…</div>`;
+  const canRaise=!h.allIn[1-i]&&p.stack>toCall;
+  const callTxt=toCall===0?'Check':(toCall>=p.stack?`Call ${fmt(p.stack)} (all-in)`:`Call ${fmt(toCall)}`);
+  return `<div class="who">${mode==='local'?`<b>${esc(nm(n,i))}</b> to act`:'<b>Your turn</b>'}${toCall>0?` · ${fmt(toCall)} to call`:''}</div>
+    <div class="acts">
+      <button class="red" data-a="fold" ${busy?'disabled':''}>Fold</button>
+      <button class="blue" data-a="${toCall===0?'check':'call'}" ${busy?'disabled':''}>${callTxt}</button>
+      <button data-a="raiseOpen" ${!canRaise||busy?'disabled':''}>${mb===0?'Bet':'Raise'}</button>
+    </div>
+    ${raiseOpen&&canRaise?raisePanel():''}`;
+}
+function raiseBounds(){const h=S.hand,i=h.toAct,mb=maxBet(h),max=h.bets[i]+S.players[i].stack;let min=mb+h.minRaise;if(min>max)min=max;return {min,max,mb,i,h}}
+function raisePanel(){
+  const {min,max,mb}=raiseBounds();
+  if(raiseTo<min||raiseTo>max)raiseTo=min;
+  return `<div class="raise">
+    <div class="small" style="text-align:center">${mb===0?'Bet':'Raise to'}</div>
+    <div class="amt" id="ramt">${fmt(raiseTo)}${raiseTo===max?' (all-in)':''}</div>
+    <input type="range" id="rslider" min="${min}" max="${max}" step="1" value="${raiseTo}">
+    <div class="quick"><button class="ghost" data-q="min">Min</button><button class="ghost" data-q="half">½ Pot</button><button class="ghost" data-q="pot">Pot</button><button class="ghost" data-q="max">All-in</button></div>
+    <div class="row"><input id="rnum" type="number" inputmode="numeric" value="${raiseTo}"><button data-a="raiseGo">Confirm</button></div>
+  </div>`;
+}
+function setRaise(v){const {min,max}=raiseBounds();raiseTo=Math.max(min,Math.min(max,Math.round(v)||min));
+  const a=$('#ramt'),s=$('#rslider'),r=$('#rnum');if(a)a.textContent=fmt(raiseTo)+(raiseTo===max?' (all-in)':'');if(s)s.value=raiseTo;if(r&&document.activeElement!==r)r.value=raiseTo}
+function wireRaise(){
+  const s=$('#rslider'),r=$('#rnum');if(!s)return;
+  s.oninput=()=>setRaise(+s.value);
+  r.oninput=()=>{const v=+r.value;const {min,max}=raiseBounds();if(v>=min&&v<=max){raiseTo=v;$('#ramt').textContent=fmt(v)+(v===max?' (all-in)':'');s.value=v}};
+  r.onblur=()=>setRaise(+r.value);
+}
+function quick(q){const {min,max,mb,i,h}=raiseBounds();const call=mb-h.bets[i],potAfter=potTotal(h)+call;
+  setRaise(q==='min'?min:q==='max'?max:q==='pot'?mb+potAfter:mb+potAfter/2)}
+function renderWaiting(){
+  $('#app').innerHTML=`<div class="top"><div class="code">Table <b>${esc(code)}</b></div><div class="tools"><button class="ghost" data-a="leave">Exit</button></div></div>
+  <div class="box" style="text-align:center"><h2>Waiting for player 2…</h2>
+    <div class="small">Ask your friend to open this same page and enter:</div>
+    <div class="bigcode">${esc(code)}</div>
+    <button class="ghost" data-a="copy">Copy invite link</button>
+    <div class="small" style="margin-top:8px">The link opens straight to this table — no login.</div>
+        <div class="small" style="margin-top:12px">Blinds ${fmt(S.settings.sb)}/${fmt(S.settings.bb)} · Starting chips ${fmt(S.settings.start)}</div></div>`;
+}
+
+// ---------- modals ----------
+function blindsModal(){
+  $('#modal').innerHTML=`<div class="modal"><div class="box"><h2>Change blinds</h2><div class="small">Applies from the next hand.</div>
+  <div class="row"><div><label>Small blind</label><input id="msb" type="number" inputmode="numeric" value="${S.settings.sb}"></div><div><label>Big blind</label><input id="mbb" type="number" inputmode="numeric" value="${S.settings.bb}"></div></div>
+  <div class="row" style="margin-top:14px"><button class="ghost" data-a="mclose">Cancel</button><button data-a="msave">Save</button></div></div></div>`;
+}
+function confirmModal(text,action,btn='Yes'){
+  $('#modal').innerHTML=`<div class="modal"><div class="box"><h2>${esc(text)}</h2><div class="row" style="margin-top:14px"><button class="ghost" data-a="mclose">Cancel</button><button class="red" data-a="${action}">${esc(btn)}</button></div></div></div>`;
+}
+
+// ---------- events ----------
+document.addEventListener('click',e=>{
+  const q=e.target.closest('[data-q]');if(q){quick(q.dataset.q);return}
+  const b=e.target.closest('[data-a]');if(!b||b.disabled)return;
+  const a=b.dataset.a;
+  switch(a){
+    case 'create':createOnline();break;
+    case 'join':joinOnline($('#jcode').value,$('#jname').value.trim());break;
+    case 'rejoin':joinOnline(ls.get('pk2_last'),ls.get('pk2_name')||'');break;
+    case 'createLocal':{const ch=readChips('l');if(!ch)return err('Check chips: big blind ≥ small blind, and less than starting chips');
+      const n1=$('#ln1').value.trim()||'Player 1',n2=$('#ln2').value.trim()||'Player 2';
+      mode='local';S=newGame([n1,n2],ch.start,ch.sb,ch.bb);log(S,'New game started');ls.set('pk2_local',S);render();break}
+    case 'resumeLocal':mode='local';S=ls.get('pk2_local');render();break;
+    case 'deal':mutate(n=>startHand(n));break;
+    case 'fold':mutate(n=>act(n,'fold'));break;
+    case 'check':mutate(n=>act(n,'check'));break;
+    case 'call':mutate(n=>act(n,'call'));break;
+    case 'raiseOpen':raiseOpen=!raiseOpen;raiseTo=0;render();break;
+    case 'raiseGo':{const v=raiseTo;mutate(n=>act(n,'raise',v));break}
+    case 'win0':mutate(n=>{award(n,0)});break;
+    case 'win1':mutate(n=>{award(n,1)});break;
+    case 'split':mutate(n=>split(n));break;
+    case 'undo':undo();break;
+    case 'blinds':blindsModal();break;
+    case 'msave':{const sb=parseInt($('#msb').value),bb=parseInt($('#mbb').value);if(!(sb>0&&bb>=sb)){toast('Big blind must be ≥ small blind');return}
+      $('#modal').innerHTML='';mutate(n=>{n.settings.sb=sb;n.settings.bb=bb;log(n,`Blinds changed to ${fmt(sb)}/${fmt(bb)}`)});break}
+    case 'mclose':$('#modal').innerHTML='';break;
+    case 'rematch':mutate(n=>{n.players.forEach(p=>p.stack=n.settings.start);n.hand=null;n.handNo=0;log(n,'Rematch! Stacks reset')});break;
+    case 'leave':confirmModal(mode==='local'?'Exit? Your game is saved on this phone.':'Leave the table? You can rejoin with the code.','leaveGo','Exit');break;
+    case 'leaveGo':$('#modal').innerHTML='';try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}home();break;
+    case 'copy':{const link=location.origin+location.pathname+'#'+code;const done=()=>toast('Invite link copied');
+      if(navigator.share){navigator.share({title:'Join my poker table',text:'Join my poker table — code '+code,url:link}).catch(()=>{});break}
+      navigator.clipboard.writeText(link).then(done).catch(()=>toast(link,6000));break}
+  }
+});
+
+// ---------- boot ----------
+myId=ls.get('pk2_dev');if(!myId){myId='d_'+Math.random().toString(36).slice(2)+Date.now().toString(36);ls.set('pk2_dev',myId)}
+try{db=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false}})}catch(e){db=null}
+home();
+(()=>{const hc=(location.hash||'').replace('#','').toUpperCase(),last=ls.get('pk2_last');
+  if(db&&hc&&hc===last)joinOnline(hc,ls.get('pk2_name')||'');})();
+</script>
+</body>
+</html>
